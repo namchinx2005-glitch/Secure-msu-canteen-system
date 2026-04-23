@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Feedback - MSU Canteen{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4"><i class="fas fa-star text-primary me-2"></i>Rate Your Order</h2>
+                    <div class="alert alert-info"><strong>Order #{{ order.order_number }}</strong><br><small>{{ order.created_at.strftime('%B %d, %Y') }}</small></div>
+                    <form method="POST">
+                        <div class="mb-4">
+                            <label class="form-label">Rating</label>
+                            <div class="rating-input">
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="rating" id="rating1" value="1" required>
+                                    <label class="btn btn-outline-danger" for="rating1"><i class="fas fa-frown"></i> Poor</label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating2" value="2">
+                                    <label class="btn btn-outline-warning" for="rating2"><i class="fas fa-meh"></i> Fair</label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating3" value="3">
+                                    <label class="btn btn-outline-secondary" for="rating3"><i class="fas fa-smile"></i> Good</label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating4" value="4">
+                                    <label class="btn btn-outline-info" for="rating4"><i class="fas fa-smile-beam"></i> Very Good</label>
+                                    <input type="radio" class="btn-check" name="rating" id="rating5" value="5">
+                                    <label class="btn btn-outline-success" for="rating5"><i class="fas fa-laugh-beam"></i> Excellent</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comment (Optional)</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="Tell us about your experience..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-paper-plane me-2"></i>Submit Feedback</button>
+                    </form>
+                    <hr>
+                    <div class="text-center"><a href="{{ url_for('my_orders') }}" class="text-muted"><i class="fas fa-arrow-left me-1"></i>Back to My Orders</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

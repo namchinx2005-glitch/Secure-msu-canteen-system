@@ -1,0 +1,192 @@
+/* MSU Canteen - Custom Styles */
+:root {
+    --msu-purple: #6B2D8C;
+    --msu-gold: #FFD700;
+    --primary-color: #6B2D8C;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--msu-purple) !important;
+}
+
+.btn-primary {
+    background-color: var(--msu-purple);
+    border-color: var(--msu-purple);
+}
+
+.btn-primary:hover {
+    background-color: #5a2577;
+    border-color: #5a2577;
+}
+
+.hero-section {
+    background: linear-gradient(135deg, var(--msu-purple) 0%, #8B3DA8 100%);
+    color: white;
+    padding: 80px 0;
+    margin-bottom: 40px;
+}
+
+.feature-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 15px;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.category-card {
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.category-card:hover {
+    transform: scale(1.03);
+}
+
+.menu-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.menu-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.menu-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+.price-tag {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--msu-purple);
+}
+
+.badge-vegetarian {
+    background-color: #28a745;
+}
+
+.badge-vegan {
+    background-color: #17a2b8;
+}
+
+.footer {
+    background-color: #2d2d2d;
+    color: white;
+    padding: 40px 0;
+    margin-top: 60px;
+}
+
+.form-control:focus {
+    border-color: var(--msu-purple);
+    box-shadow: 0 0 0 0.2rem rgba(107, 45, 140, 0.25);
+}
+
+.rating-input .btn {
+    border-radius: 0;
+}
+
+.rating-input .btn-check:checked + .btn {
+    background-color: var(--msu-purple);
+    border-color: var(--msu-purple);
+    color: white;
+}
+
+.cart-item {
+    transition: background-color 0.2s ease;
+    border-radius: 10px;
+}
+
+.cart-item:hover {
+    background-color: #f8f9fa;
+}
+
+.order-status {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.status-pending {
+    background-color: #6c757d;
+    color: white;
+}
+
+.status-confirmed {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.status-preparing {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-ready {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-completed {
+    background-color: var(--msu-purple);
+    color: white;
+}
+
+.status-cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 40px 0;
+    }
+    
+    .menu-card .card-img-top {
+        height: 150px;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+}

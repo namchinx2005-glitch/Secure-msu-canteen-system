@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ item.name }} - MSU Canteen{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('menu') }}">Menu</a></li>
+            <li class="breadcrumb-item active">{{ item.name }}</li>
+        </ol>
+    </nav>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body text-center py-5"><i class="fas fa-utensils fa-7x text-primary"></i></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2>{{ item.name }}</h2>
+                        <div>{% if item.is_vegetarian %}<span class="badge bg-success">Vegetarian</span>{% endif %}{% if item.is_vegan %}<span class="badge bg-info">Vegan</span>{% endif %}{% if item.is_gluten_free %}<span class="badge bg-warning text-dark">Gluten Free</span>{% endif %}</div>
+                    </div>
+                    <p class="text-muted">{{ item.description }}</p>
+                    <hr>
+                    <div class="row mb-3">
+                        <div class="col-6"><p class="mb-1"><strong>Price</strong></p><p class="h3 text-primary">${{ "%.2f"|format(item.price) }}</p></div>
+                        <div class="col-6"><p class="mb-1"><strong>Category</strong></p><p>{{ item.category.name if item.category else 'N/A' }}</p></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6"><p class="mb-1"><i class="fas fa-clock me-2"></i><strong>Prep Time</strong></p><p>{{ item.preparation_time }} minutes</p></div>
+                        {% if item.calories %}<div class="col-6"><p class="mb-1"><i class="fas fa-fire me-2"></i><strong>Calories</strong></p><p>{{ item.calories }}</p></div>{% endif %}
+                    </div>
+                    {% if item.is_available %}
+                    <form action="{{ url_for('add_to_cart', item_id=item.id) }}" method="post" class="d-flex gap-2 mt-4">
+                        <input type="number" name="quantity" class="form-control" value="1" min="1" max="10" style="width: 80px;">
+                        <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-cart-plus me-2"></i>Add to Cart</button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-danger mt-4"><i class="fas fa-exclamation-circle me-2"></i>This item is currently unavailable</div>
+                    {% endif %}
+                    <a href="{{ url_for('menu') }}" class="btn btn-outline-primary mt-2"><i class="fas fa-arrow-left me-2"></i>Back to Menu</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
