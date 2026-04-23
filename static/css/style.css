@@ -1,8 +1,8 @@
 /* MSU Canteen - Custom Styles */
 :root {
-    --msu-purple: #6B2D8C;
+    --msu-blue: #1e06f3;
     --msu-gold: #FFD700;
-    --primary-color: #6B2D8C;
+    --primary-color: #0118e9;
 }
 
 body {
@@ -11,26 +11,26 @@ body {
 }
 
 .navbar {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgb(2, 49, 255);
 }
 
 .navbar-brand {
     font-weight: 700;
-    color: var(--msu-purple) !important;
+    color: var(--msu-blue) !important;
 }
 
 .btn-primary {
-    background-color: var(--msu-purple);
-    border-color: var(--msu-purple);
+    background-color: var(--msu-blue);
+    border-color: var(--msu-blue);
 }
 
 .btn-primary:hover {
-    background-color: #5a2577;
-    border-color: #5a2577;
+    background-color: #0004f8;
+    border-color: #0319d8;
 }
 
 .hero-section {
-    background: linear-gradient(135deg, var(--msu-purple) 0%, #8B3DA8 100%);
+    background: linear-gradient(135deg, var(--msu-blue) 0%, #0415ff 100%);
     color: white;
     padding: 80px 0;
     margin-bottom: 40px;
@@ -79,7 +79,7 @@ body {
 .price-tag {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--msu-purple);
+    color: var(--msu-blue);
 }
 
 .badge-vegetarian {
@@ -98,8 +98,8 @@ body {
 }
 
 .form-control:focus {
-    border-color: var(--msu-purple);
-    box-shadow: 0 0 0 0.2rem rgba(107, 45, 140, 0.25);
+    border-color: var(--msu-blue);
+    box-shadow: 0 0 0 0.2rem rgba(26, 1, 255, 0.25);
 }
 
 .rating-input .btn {
@@ -107,8 +107,8 @@ body {
 }
 
 .rating-input .btn-check:checked + .btn {
-    background-color: var(--msu-purple);
-    border-color: var(--msu-purple);
+    background-color: var(--msu-blue);
+    border-color: var(--msu-blue);
     color: white;
 }
 
@@ -150,7 +150,7 @@ body {
 }
 
 .status-completed {
-    background-color: var(--msu-purple);
+    background-color: var(--msu-blue);
     color: white;
 }
 
@@ -189,4 +189,24 @@ body {
 .table {
     border-radius: 10px;
     overflow: hidden;
+}
+
+
+/* This targets the navbar background specifically */
+.navbar.navbar-expand-lg {
+    background-color: #0118e9 !important; /* Your primary blue */
+}
+
+/* This makes sure the text and logo are readable on blue */
+.navbar .navbar-brand, 
+.navbar .nav-link {
+    color: white !important;
+}
+
+/* Optional: Make the hamburger menu icon white for mobile */
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+.navbar-toggler-icon {
+    filter: invert(1);
 }
