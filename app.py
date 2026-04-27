@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, render_template_string
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, render_template_string, current_app
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -24,6 +24,8 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
 
     db.init_app(app)
+    mail.init_app(app)
+
     mail.init_app(app)
 
     login_manager = LoginManager()
@@ -52,46 +54,101 @@ def create_app(config_name=None):
     return app
 
 
-def ensure_student_verified_column(app):
-    """Ensure is_verified column exists in students table for backwards compatibility."""
-    try:
-        inspector = inspect(db.engine)
-        if "students" in inspector.get_table_names():
-            columns = [col["name"] for col in inspector.get_columns("students")]
-            if "is_verified" not in columns:
-                with db.engine.begin() as connection:
-                    connection.execute(text("ALTER TABLE students ADD COLUMN is_verified BOOLEAN DEFAULT 0"))
-    except Exception as e:
-        app.logger.warning(f"Could not ensure is_verified column: {e}")
+def send_2fa_email(user):
+    """Send 2FA verification code via email or SMS gateway."""
+    user.generate_2fa_code()
+    if current_app.config.get('MAIL_USERNAME'):
+        sms_gateway = current_app.config.get('SMS_GATEWAY_DOMAIN')
+        if user.phone and sms_gateway:
+            recipient = f"{user.phone}@{sms_gateway}"
+        else:
+            recipient = user.email
+
+        msg = Message(
+            subject="Your MSU Canteen Verification Code",
+            recipients=[recipient],
+            body=f"Your verification code is: {user.verification_code}\n\nThis code will expire in 10 minutes."
+        )
+        mail.send(msg)
+    else:
+        print(f"2FA Code for {user.email if user.email else user.phone}: {user.verification_code}")  # For development
 
 
 def register_routes(app):
     """Register all application routes."""
 
-    def send_2fa_email(email, code):
-        """Send 2FA verification code via email."""
-        if not app.config.get("MAIL_USERNAME") or not app.config.get("MAIL_PASSWORD"):
-            app.logger.warning("Email credentials are not configured; dropping 2FA email and printing code to console.")
-            print(f"[2FA DEBUG] Send code to {email}: {code}")
-            return True
+    @app.route("/verify", methods=["GET", "POST"])
+    def verify():
+        if 'pending_2fa_user_id' not in session:
+            flash("No pending verification.", "danger")
+            return redirect(url_for("login"))
 
-        msg = Message(
-            subject="Your 2FA Verification Code",
-            recipients=[email],
-            body=f"Your verification code is: {code}\n\nPlease enter this code to complete your registration."
-        )
-        try:
-            mail.send(msg)
-            return True
-        except Exception as exc:
-            app.logger.error("Failed to send 2FA email: %s", exc)
-            return False
+        user = Student.query.get(session['pending_2fa_user_id'])
+        if not user:
+            flash("User not found.", "danger")
+            return redirect(url_for("login"))
+
+        if request.method == "POST":
+            code = request.form.get("code")
+            if user.verify_2fa_code(code):
+                session.pop('pending_2fa_user_id', None)
+
+                # Check if there's pending order data
+                pending_order = session.pop('pending_order_data', None)
+                if pending_order:
+                    # Process the pending order
+                    order_number = generate_order_number()
+                    order = Order(
+                        order_number=order_number,
+                        student_id=user.id,
+                        total_amount=pending_order['total'],
+                        notes=pending_order['notes'],
+                        estimated_ready_time=datetime.utcnow() + timedelta(minutes=20)
+                    )
+                    db.session.add(order)
+                    db.session.flush()
+
+                    for item_id, quantity in pending_order['cart_data'].items():
+                        item = MenuItem.query.get(int(item_id))
+                        if item and item.is_available:
+                            order_item = OrderItem(
+                                order_id=order.id,
+                                menu_item_id=item.id,
+                                quantity=quantity,
+                                unit_price=item.price,
+                                subtotal=item.price * quantity
+                            )
+                            db.session.add(order_item)
+
+                    db.session.commit()
+                    session.pop("cart", None)
+                    user.last_login_ip = request.remote_addr
+                    db.session.commit()
+                    flash(f"Order placed successfully! Order number: {order_number}", "success")
+                    login_user(user)
+                    return redirect(url_for("order_confirmation", order_id=order.id))
+
+                # Normal login after 2FA
+                user.last_login_ip = request.remote_addr
+                db.session.commit()
+                login_user(user)
+                flash("Verification successful! Logged in.", "success")
+                return redirect(url_for("index"))
+            else:
+                flash("Invalid or expired verification code.", "danger")
+
+        return render_template("verify.html")
 
     @app.route("/")
     def index():
-        if current_user.is_authenticated:
-            return redirect_user_by_role(current_user)
-        return redirect(url_for("login"))
+        categories = Category.query.filter_by(is_active=True).order_by(Category.display_order).all()
+        featured_items = MenuItem.query.filter_by(is_available=True).limit(6).all()
+
+        return render_template(
+            "index.html",
+            categories=categories,
+            featured_items=featured_items
+        )
 
     @app.route("/register", methods=["GET", "POST"])
     def register():
@@ -138,18 +195,11 @@ def register_routes(app):
             db.session.add(student)
             db.session.commit()
 
-            # Generate 2FA code
-            code = ''.join(random.choices(string.digits, k=6))
-            session['2fa_code'] = code
-            session['pending_user_id'] = student.id
-
-            # Send verification email
-            if not send_2fa_email(student.email, code):
-                flash("Unable to send verification email right now. Please try again later.", "danger")
-                return render_template("register.html")
-
-            flash("Registration successful! Please check your email for the verification code.", "success")
-            return redirect(url_for("verify_2fa"))
+            # Send 2FA code for new registration
+            send_2fa_email(student)
+            session['pending_2fa_user_id'] = student.id
+            flash("Registration successful! A verification code has been sent to your email.", "success")
+            return redirect(url_for("verify"))
 
         return render_template("register.html")
 
@@ -198,19 +248,11 @@ def register_routes(app):
                 student = Student.query.filter_by(student_id=student_id, role="student").first()
 
             if student and check_password_hash(student.password_hash, password):
-                if not student.is_verified:
-                    # Generate new 2FA code for unverified user
-                    code = ''.join(random.choices(string.digits, k=6))
-                    session['2fa_code'] = code
-                    session['pending_user_id'] = student.id
-                    if not send_2fa_email(student.email, code):
-                        flash("Unable to send verification email right now. Please try again later.", "danger")
-                        return render_template("login.html")
-                    flash("Please verify your account first. Check your email for the code.", "warning")
-                    return redirect(url_for("verify_2fa"))
-                login_user(student)
-                flash("Logged in successfully!", "success")
-                return redirect_user_by_role(student)
+                # Always trigger 2FA on login via email
+                send_2fa_email(student)
+                session['pending_2fa_user_id'] = student.id
+                flash("A verification code has been sent to your email. Please verify to continue.", "info")
+                return redirect(url_for("verify.html"))
 
             flash("Invalid email/student ID or password.", "danger")
 
@@ -430,6 +472,18 @@ def register_routes(app):
                 total += subtotal
 
         if request.method == "POST":
+            # Check if order exceeds threshold and requires 2FA
+            if total > app.config['TWO_FA_ORDER_THRESHOLD']:
+                send_2fa_email(current_user)
+                session['pending_2fa_user_id'] = current_user.id
+                session['pending_order_data'] = {
+                    'notes': request.form.get("notes"),
+                    'cart_data': cart_data,
+                    'total': total
+                }
+                flash(f"Order total exceeds ${app.config['TWO_FA_ORDER_THRESHOLD']}. Please verify your identity.", "warning")
+                return redirect(url_for("verify"))
+
             notes = request.form.get("notes")
             order_number = generate_order_number()
 
