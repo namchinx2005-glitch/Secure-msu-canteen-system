@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
 
 db = SQLAlchemy()
 
@@ -30,6 +31,12 @@ class Student(UserMixin, db.Model):
 
     is_verified = db.Column(db.Boolean, default=False)
 
+    verification_code = db.Column(db.String(6))
+
+    verification_code_expires_at = db.Column(db.DateTime)
+
+    last_login_ip = db.Column(db.String(45))
+
     def __repr__(self):
         return f"<Student {self.email} - {self.role}>"
 
@@ -42,6 +49,25 @@ class Student(UserMixin, db.Model):
             "department": self.department,
             "role": self.role
         }
+
+    def generate_2fa_code(self):
+        self.verification_code = f"{random.randint(0, 999999):06d}"
+        self.verification_code_expires_at = datetime.utcnow() + timedelta(minutes=10)
+        db.session.commit()
+
+    def verify_2fa_code(self, code):
+        if not code or not self.verification_code or not self.verification_code_expires_at:
+            return False
+        if datetime.utcnow() > self.verification_code_expires_at:
+            return False
+        if code != self.verification_code:
+            return False
+
+        self.is_verified = True
+        self.verification_code = None
+        self.verification_code_expires_at = None
+        db.session.commit()
+        return True
 
 
 class Category(db.Model):

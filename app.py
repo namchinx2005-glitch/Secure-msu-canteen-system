@@ -252,7 +252,7 @@ def register_routes(app):
                 send_2fa_email(student)
                 session['pending_2fa_user_id'] = student.id
                 flash("A verification code has been sent to your email. Please verify to continue.", "info")
-                return redirect(url_for("verify.html"))
+                return redirect(url_for("verify"))
 
             flash("Invalid email/student ID or password.", "danger")
 
@@ -692,6 +692,26 @@ def generate_order_number():
     return f"MSU-{timestamp}-{random_suffix}"
 
 
+def ensure_student_verified_column(app):
+    """Add missing columns for older SQLite databases created before 2FA."""
+    student_columns = {
+        column["name"]
+        for column in inspect(db.engine).get_columns(Student.__tablename__)
+    }
+    migrations = {
+        "is_verified": "ALTER TABLE students ADD COLUMN is_verified BOOLEAN DEFAULT 0",
+        "verification_code": "ALTER TABLE students ADD COLUMN verification_code VARCHAR(6)",
+        "verification_code_expires_at": "ALTER TABLE students ADD COLUMN verification_code_expires_at DATETIME",
+        "last_login_ip": "ALTER TABLE students ADD COLUMN last_login_ip VARCHAR(45)",
+    }
+
+    for column_name, statement in migrations.items():
+        if column_name not in student_columns:
+            db.session.execute(text(statement))
+
+    db.session.commit()
+
+
 def seed_database():
     """Add default categories and menu items if database is empty."""
     if Category.query.first():
@@ -739,4 +759,4 @@ def seed_database():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)
