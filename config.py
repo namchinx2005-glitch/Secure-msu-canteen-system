@@ -15,6 +15,7 @@ class Config:
 
     ITEMS_PER_PAGE = 12
     MAX_ORDER_ITEMS = 20
+    TWO_FA_ORDER_THRESHOLD = float(os.environ.get("TWO_FA_ORDER_THRESHOLD", 100))
 
     ADMIN_KEY = os.environ.get("ADMIN_KEY", "MSUadminSpecial")
     MANAGER_KEY = os.environ.get("MANAGER_KEY", "MSUmanagerSpecial")
@@ -30,6 +31,7 @@ class Config:
     MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "benhailelpadrey@gmail.com")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "tnqa hesa livx bjxu")
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER") or MAIL_USERNAME
+    SMS_GATEWAY_DOMAIN = os.environ.get("SMS_GATEWAY_DOMAIN")
 
 
 class DevelopmentConfig(Config):
